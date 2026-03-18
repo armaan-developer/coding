@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0f0f8;
+    --muted: #6b6b88;
+    --whatsapp: #25d366;
+    --whatsapp-glow: rgba(37,211,102,0.25);
+    --accent: #7b6fff;
+    --accent-glow: rgba(123,111,255,0.2);
+    --red: #ff4757;
+    --red-glow: rgba(255,71,87,0.15);
+    --green: #34c759;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 20%, rgba(123,111,255,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 80%, rgba(37,211,102,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    width: 100%;
+    max-width: 440px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── SHARED CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+  }
+
+  .logo {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .screen-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-align: center;
+    margin-bottom: 0.4rem;
+  }
+
+  .screen-title span {
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .screen-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 1.75rem;
+    line-height: 1.6;
+  }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="text"],
+  input[type="tel"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+    letter-spacing: 0.04em;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  input.error {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px var(--red-glow);
+    animation: shake 0.3s ease;
+  }
+
+  .error-msg {
+    font-size: 0.78rem;
+    color: var(--red);
+    margin-top: -0.6rem;
+    margin-bottom: 1rem;
+    font-family: 'DM Mono', monospace;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  .btn {
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: 12px;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 24px var(--accent-glow);
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── CODE DISPLAY ── */
+  .code-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    text-align: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .code-box .code-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+
+  .code-box .code-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+  }
+
+  .code-box .code-hint {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  /* ── WELCOME SCREEN ── */
+  .welcome-anim {
+    text-align: center;
+    padding: 2.5rem 2rem;
+  }
+
+  .welcome-emoji {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    display: block;
+    animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
+  }
+
+  .welcome-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  .welcome-name span {
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .welcome-sub {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-bottom: 2rem;
+  }
+
+  /* ── MAIN APP ── */
+  .app-container {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .app-header .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.35rem 0.9rem 0.35rem 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .user-pill .avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* Camera */
+  .cam-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .video-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #localVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    transform: scaleX(-1);
+  }
+
+  .cam-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--muted);
+  }
+
+  .cam-placeholder .icon { font-size: 3rem; opacity: 0.35; }
+
+  .cam-placeholder p {
+    font-size: 0.85rem;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 200px;
+  }
+
+  .live-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    border-radius: 100px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--red);
+  }
+
+  .live-badge .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 1s ease infinite;
+  }
+
+  .cam-controls {
+    display: flex;
+    gap: 0.6rem;
+    padding: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrl-btn.danger { border-color: rgba(255,71,87,0.3); color: var(--red); }
+  .ctrl-btn.danger:hover { border-color: var(--red); background: rgba(255,71,87,0.1); }
+  .ctrl-btn.cam-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+  .ctrl-btn.cam-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* Phone + WhatsApp */
+  .wa-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .wa-card .card-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .flag-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    padding: 0 0.6rem;
+    cursor: pointer;
+    outline: none;
+    flex-shrink: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .phone-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    padding: 0.65rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.05em;
+    margin-bottom: 0;
+  }
+
+  .phone-input::placeholder { color: var(--muted); opacity: 0.5; }
+  .phone-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  .whatsapp-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid rgba(37,211,102,0.2);
+    border-radius: 16px;
+    color: var(--whatsapp);
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .whatsapp-btn:hover {
+    border-color: var(--whatsapp);
+    box-shadow: 0 8px 30px var(--whatsapp-glow);
+    transform: translateY(-2px);
+  }
+
+  .whatsapp-btn:active { transform: translateY(0); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.8rem;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    opacity: 0;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── SCREEN 1: REGISTER (first visit) ── -->
+<div class="screen" id="screen-register">
+  <div class="card">
+    <div class="logo">👋</div>
+    <div class="screen-title">Welcome to <span>Connect</span></div>
+    <div class="screen-sub">Enter your name to get your personal access code.</div>
+    <label for="nameInput">Your name</label>
+    <input type="text" id="nameInput" placeholder="e.g. Armaan" maxlength="30" />
+    <button class="btn btn-primary" onclick="register()">Generate My Code →</button>
+  </div>
+</div>
+
+<!-- ── SCREEN 2: SHOW CODE ── -->
+<div class="screen" id="screen-code">
+  <div class="card">
+    <div class="logo">🔑</div>
+    <div class="screen-title">Your <span>access code</span></div>
+    <div class="screen-sub">Save this code — you'll need it every time you log in.</div>
+    <div class="code-box">
+      <div class="code-label">Your unique code</div>
+      <div class="code-value" id="displayCode">——</div>
+      <div class="code-hint">Screenshot this or write it down</div>
+    </div>
+    <button class="btn btn-primary" onclick="goToLogin()">Got it, Continue →</button>
+  </div>
+</div>
+
+<!-- ── SCREEN 3: LOGIN ── -->
+<div class="screen" id="screen-login">
+  <div class="card">
+    <div class="logo">🔐</div>
+    <div class="screen-title">Enter your <span>code</span></div>
+    <div class="screen-sub" id="loginSub">Welcome back! Enter your access code to continue.</div>
+    <label for="codeInput">Access code</label>
+    <input type="text" id="codeInput" placeholder="e.g. A3F9" maxlength="6" style="text-transform:uppercase;letter-spacing:0.3em;font-size:1.4rem;text-align:center;" />
+    <div class="error-msg" id="codeError">⚠️ Wrong code — try again</div>
+    <button class="btn btn-primary" onclick="login()">Enter →</button>
+  </div>
+</div>
+
+<!-- ── SCREEN 4: WELCOME ── -->
+<div class="screen" id="screen-welcome">
+  <div class="card">
+    <div class="welcome-anim">
+      <span class="welcome-emoji">🎉</span>
+      <div class="welcome-name">Hey, <span id="welcomeName">there</span>!</div>
+      <div class="welcome-sub">You're in. Let's get your camera ready.</div>
+      <button class="btn btn-primary" onclick="goToApp()">Open Camera →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN 5: MAIN APP ── -->
+<div class="screen" id="screen-app">
+  <div class="app-container">
+    <div class="app-header">
+      <div class="user-pill">
+        <div class="avatar" id="userAvatar">A</div>
+        <span id="userNameDisplay">User</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+
+    <div class="cam-section">
+      <div class="video-wrapper">
+        <div class="cam-placeholder" id="placeholder">
+          <div class="icon">📷</div>
+          <p>Tap "Start Camera" to go live</p>
+        </div>
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="live-badge" id="liveBadge">
+          <span class="live-dot"></span> LIVE
+        </div>
+      </div>
+      <div class="cam-controls">
+        <button class="ctrl-btn cam-primary" id="startBtn" onclick="startCamera()">▶ Start Camera</button>
+        <button class="ctrl-btn" id="flipBtn" onclick="flipCamera()" style="display:none">🔄 Flip</button>
+        <button class="ctrl-btn danger" id="stopBtn" onclick="stopCamera()" style="display:none">⏹ Stop</button>
+      </div>
+    </div>
+
+    <div class="wa-card">
+      <div class="card-label">Send WhatsApp Video Call to</div>
+      <div class="input-row">
+        <select class="flag-select" id="countryCode">
+          <option value="+1">🇺🇸 +1</option>
+          <option value="+44">🇬🇧 +44</option>
+          <option value="+49">🇩🇪 +49</option>
+          <option value="+33">🇫🇷 +33</option>
+          <option value="+61">🇦🇺 +61</option>
+          <option value="+91">🇮🇳 +91</option>
+          <option value="+55">🇧🇷 +55</option>
+          <option value="+81">🇯🇵 +81</option>
+          <option value="+52">🇲🇽 +52</option>
+        </select>
+        <input class="phone-input" id="phoneInput" type="tel" placeholder="0000000000" maxlength="10" inputmode="numeric" />
+      </div>
+    </div>
+
+    <button class="whatsapp-btn" onclick="launchWhatsApp()">
+      💬 &nbsp; Open WhatsApp Video Call
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Helpers ──
+  function showToast(msg, duration = 2800) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function generateCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
+  // ── Register ──
+  function register() {
+    const name = document.getElementById('nameInput').value.trim();
+    if (!name) {
+      document.getElementById('nameInput').classList.add('error');
+      setTimeout(() => document.getElementById('nameInput').classList.remove('error'), 600);
+      showToast('⚠️  Please enter your name');
+      return;
+    }
+    const code = generateCode();
+    localStorage.setItem('connect_name', name);
+    localStorage.setItem('connect_code', code);
+    document.getElementById('displayCode').textContent = code;
+    showScreen('screen-code');
+  }
+
+  // ── Show code then go to login ──
+  function goToLogin() {
+    const name = localStorage.getItem('connect_name') || 'there';
+    document.getElementById('loginSub').textContent = `Welcome back, ${name}! Enter your access code.`;
+    showScreen('screen-login');
+  }
+
+  // ── Login ──
+  function login() {
+    const entered = document.getElementById('codeInput').value.trim().toUpperCase();
+    const saved = localStorage.getItem('connect_code');
+    const name = localStorage.getItem('connect_name') || 'there';
+    const input = document.getElementById('codeInput');
+    const err = document.getElementById('codeError');
+
+    if (entered === saved) {
+      err.classList.remove('show');
+      input.classList.remove('error');
+      document.getElementById('welcomeName').textContent = name;
+      showScreen('screen-welcome');
+    } else {
+      input.classList.add('error');
+      err.classList.add('show');
+      setTimeout(() => input.classList.remove('error'), 400);
+      showToast('❌  Wrong code — try again');
+      input.value = '';
+    }
+  }
+
+  // ── Welcome → App ──
+  function goToApp() {
+    const name = localStorage.getItem('connect_name') || 'User';
+    document.getElementById('userNameDisplay').textContent = name;
+    document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+    showScreen('screen-app');
+  }
+
+  // ── Logout ──
+  function logout() {
+    stopCamera(false);
+    document.getElementById('codeInput').value = '';
+    document.getElementById('codeError').classList.remove('show');
+    const name = localStorage.getItem('connect_name') || '';
+    document.getElementById('loginSub').textContent = `Welcome back, ${name}! Enter your access code.`;
+    showScreen('screen-login');
+    showToast('👋  Signed out');
+  }
+
+  // ── Camera ──
+  let stream = null;
+  let facingMode = 'user';
+
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      const video = document.getElementById('localVideo');
+      video.srcObject = stream;
+      video.style.display = 'block';
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('liveBadge').style.display = 'flex';
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('flipBtn').style.display = 'flex';
+      document.getElementById('stopBtn').style.display = 'flex';
+      showToast('📷  Camera is live');
+    } catch (err) {
+      if (err.name === 'NotAllowedError') showToast('⚠️  Allow camera permission and try again');
+      else if (err.name === 'NotFoundError') showToast('⚠️  No camera found on this device');
+      else showToast('⚠️  Camera error: ' + err.message);
+    }
+  }
+
+  async function flipCamera() {
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    await startCamera();
+    showToast(facingMode === 'user' ? '🤳  Front camera' : '📸  Back camera');
+  }
+
+  function stopCamera(showMsg = true) {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    const video = document.getElementById('localVideo');
+    video.srcObject = null;
+    video.style.display = 'none';
+    document.getElementById('placeholder').style.display = 'flex';
+    document.getElementById('liveBadge').style.display = 'none';
+    document.getElementById('startBtn').style.display = 'flex';
+    document.getElementById('flipBtn').style.display = 'none';
+    document.getElementById('stopBtn').style.display = 'none';
+    if (showMsg) showToast('⏹  Camera stopped');
+  }
+
+  // ── WhatsApp ──
+  function launchWhatsApp() {
+    const code = document.getElementById('countryCode').value;
+    const raw = document.getElementById('phoneInput').value.replace(/\D/g, '');
+    if (!raw || raw.length < 6) { showToast('⚠️  Enter a valid phone number first'); return; }
+    const e164 = code.replace('+', '') + raw;
+    window.open(`https://wa.me/${e164}?text=Hey%2C%20let%27s%20jump%20on%20a%20video%20call!`, '_blank');
+    showToast(`💬  Opening WhatsApp → ${code}${raw}`);
+  }
+
+  document.getElementById('phoneInput').addEventListener('input', function() {
+    let val = this.value.replace(/\D/g, '');
+    if (val.length > 10) val = val.slice(0, 10);
+    this.value = val;
+  });
+
+  // Enter key on code input
+  document.getElementById('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
+
+  // ── Init: decide which screen to show ──
+  (function init() {
+    const savedCode = localStorage.getItem('connect_code');
+    const savedName = localStorage.getItem('connect_name');
+    if (savedCode && savedName) {
+      document.getElementById('loginSub').textContent = `Welcome back, ${savedName}! Enter your access code.`;
+      showScreen('screen-login');
+    } else {
+      showScreen('screen-register');
+    }
+  })();
+</script>
+</body>
+</html>
