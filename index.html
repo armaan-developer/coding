@@ -47,7 +47,6 @@
     pointer-events: none;
   }
 
-  /* ── SCREENS ── */
   .screen {
     display: none;
     width: 100%;
@@ -56,7 +55,6 @@
   }
   .screen.active { display: flex; flex-direction: column; }
 
-  /* ── SHARED CARD ── */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -162,7 +160,6 @@
   .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-primary:active { transform: translateY(0); }
 
-  /* ── CODE DISPLAY ── */
   .code-box {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -194,7 +191,6 @@
     margin-top: 0.5rem;
   }
 
-  /* ── WELCOME SCREEN ── */
   .welcome-anim {
     text-align: center;
     padding: 2.5rem 2rem;
@@ -227,7 +223,6 @@
     margin-bottom: 2rem;
   }
 
-  /* ── MAIN APP ── */
   .app-container {
     width: 100%;
     max-width: 500px;
@@ -278,7 +273,6 @@
 
   .logout-btn:hover { border-color: var(--red); color: var(--red); }
 
-  /* Camera */
   .cam-section {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -382,7 +376,6 @@
   }
   .ctrl-btn.cam-primary:hover { opacity: 0.9; transform: translateY(-1px); }
 
-  /* Phone + WhatsApp */
   .wa-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -466,7 +459,6 @@
 
   .whatsapp-btn:active { transform: translateY(0); }
 
-  /* Toast */
   .toast {
     position: fixed;
     bottom: 2rem;
@@ -488,7 +480,6 @@
 
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* Animations */
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
@@ -513,7 +504,6 @@
 </head>
 <body>
 
-<!-- ── SCREEN 1: REGISTER (first visit) ── -->
 <div class="screen" id="screen-register">
   <div class="card">
     <div class="logo">👋</div>
@@ -525,7 +515,6 @@
   </div>
 </div>
 
-<!-- ── SCREEN 2: SHOW CODE ── -->
 <div class="screen" id="screen-code">
   <div class="card">
     <div class="logo">🔑</div>
@@ -540,7 +529,6 @@
   </div>
 </div>
 
-<!-- ── SCREEN 3: LOGIN ── -->
 <div class="screen" id="screen-login">
   <div class="card">
     <div class="logo">🔐</div>
@@ -553,7 +541,6 @@
   </div>
 </div>
 
-<!-- ── SCREEN 4: WELCOME ── -->
 <div class="screen" id="screen-welcome">
   <div class="card">
     <div class="welcome-anim">
@@ -565,7 +552,6 @@
   </div>
 </div>
 
-<!-- ── SCREEN 5: MAIN APP ── -->
 <div class="screen" id="screen-app">
   <div class="app-container">
     <div class="app-header">
@@ -621,7 +607,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── Helpers ──
   function showToast(msg, duration = 2800) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -641,7 +626,6 @@
     return code;
   }
 
-  // ── Register ──
   function register() {
     const name = document.getElementById('nameInput').value.trim();
     if (!name) {
@@ -657,14 +641,12 @@
     showScreen('screen-code');
   }
 
-  // ── Show code then go to login ──
   function goToLogin() {
     const name = localStorage.getItem('connect_name') || 'there';
     document.getElementById('loginSub').textContent = `Welcome back, ${name}! Enter your access code.`;
     showScreen('screen-login');
   }
 
-  // ── Login ──
   function login() {
     const entered = document.getElementById('codeInput').value.trim().toUpperCase();
     const saved = localStorage.getItem('connect_code');
@@ -686,7 +668,6 @@
     }
   }
 
-  // ── Welcome → App ──
   function goToApp() {
     const name = localStorage.getItem('connect_name') || 'User';
     document.getElementById('userNameDisplay').textContent = name;
@@ -694,7 +675,6 @@
     showScreen('screen-app');
   }
 
-  // ── Logout ──
   function logout() {
     stopCamera(false);
     document.getElementById('codeInput').value = '';
@@ -705,7 +685,6 @@
     showToast('👋  Signed out');
   }
 
-  // ── Camera ──
   let stream = null;
   let facingMode = 'user';
 
@@ -751,7 +730,6 @@
     if (showMsg) showToast('⏹  Camera stopped');
   }
 
-  // ── WhatsApp ──
   function launchWhatsApp() {
     const code = document.getElementById('countryCode').value;
     const raw = document.getElementById('phoneInput').value.replace(/\D/g, '');
@@ -767,11 +745,9 @@
     this.value = val;
   });
 
-  // Enter key on code input
   document.getElementById('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
   document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
 
-  // ── Init: decide which screen to show ──
   (function init() {
     const savedCode = localStorage.getItem('connect_code');
     const savedName = localStorage.getItem('connect_name');
